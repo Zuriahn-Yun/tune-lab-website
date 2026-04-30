@@ -173,20 +173,21 @@ function PostBody({ blocks }) {
             }}>{b.text}</p>;
           case "h2":
             return <h2 key={i} style={{
-              fontFamily: "var(--ws-sans)",
-              fontSize: 22,
-              fontWeight: 500,
-              letterSpacing: "-0.015em",
+              fontFamily: "var(--ws-display)",
+              fontSize: 24,
+              fontWeight: 300,
+              letterSpacing: "-0.02em",
               color: "var(--ws-fg)",
-              margin: "56px 0 20px",
+              margin: "60px 0 20px",
             }}>{b.text}</h2>;
           case "h3":
             return <h3 key={i} style={{
-              fontFamily: "var(--ws-sans)",
-              fontSize: 17,
-              fontWeight: 500,
+              fontFamily: "var(--ws-display)",
+              fontSize: 18,
+              fontWeight: 300,
+              letterSpacing: "-0.01em",
               color: "var(--ws-fg)",
-              margin: "40px 0 14px",
+              margin: "44px 0 14px",
             }}>{b.text}</h3>;
           case "code":
             return <CodeBlock key={i} {...b} />;
@@ -253,20 +254,15 @@ function PostPage({ slug, navigate }) {
           >
             ← archive
           </a>
-          <div style={{
-            fontFamily: "var(--ws-mono)",
-            fontSize: 11,
-            color: "var(--ws-accent)",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            marginBottom: 18,
-          }}>
-            {(post.tags || []).join(" · ")}
+          <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+            {(post.tags || []).map(tag => (
+              <span key={tag} className="ws-tag">{tag}</span>
+            ))}
           </div>
           <h1 style={{
-            fontFamily: "var(--ws-sans)",
-            fontSize: 36,
-            fontWeight: 500,
+            fontFamily: "var(--ws-display)",
+            fontSize: 42,
+            fontWeight: 300,
             letterSpacing: "-0.022em",
             lineHeight: 1.18,
             color: "var(--ws-fg)",
@@ -277,15 +273,15 @@ function PostPage({ slug, navigate }) {
             {post.title}
           </h1>
           <div style={{
-            display: "flex",
-            gap: 28,
-            fontFamily: "var(--ws-mono)",
-            fontSize: 12,
-            color: "var(--ws-dim)",
+            display: "flex", gap: 24, alignItems: "center",
+            fontFamily: "var(--ws-mono)", fontSize: 11,
+            letterSpacing: "0.04em", color: "var(--ws-dim)",
             paddingTop: 8,
           }}>
-            <span><span style={{ opacity: 0.6 }}>by</span> {post.author}</span>
+            <span><span style={{ opacity: 0.5 }}>by</span> {post.author}</span>
+            <span style={{ opacity: 0.3 }}>·</span>
             <span>{post.date}</span>
+            <span style={{ opacity: 0.3 }}>·</span>
             <span>{calcReadTime(post.body)} min read</span>
           </div>
         </div>

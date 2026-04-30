@@ -14,46 +14,90 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
   :root {
-    /* Dark mode rebrand: deeper, slightly cool — picks up logo's indigo cast */
-    --ws-bg: #0B0C14;
-    --ws-bg-2: #11132066;
-    --ws-fg: #E8EAF6;
-    --ws-dim: #8A8FB0;
-    --ws-dim2: #5A5F7E;
-    --ws-rule: rgba(232, 234, 246, 0.08);
+    /* Background — deeper, cooler to match logo's indigo cast */
+    --ws-bg: #090A11;
+    --ws-bg-raised: rgba(255,255,255,0.025);
+    --ws-fg: #ECEEF8;
+    --ws-dim: #7C82A8;
+    --ws-dim2: #4C5070;
+    --ws-rule: rgba(236, 238, 248, 0.07);
+    --ws-rule-strong: rgba(236, 238, 248, 0.13);
 
-    /* Logo palette */
+    /* Brand palette — from logo */
     --ll-indigo-deep: #1E2A78;
     --ll-blue: #3D5BD9;
     --ll-violet: #7B5BC9;
     --ll-purple: #9B4DC9;
     --ll-cyan: #6BB8E8;
 
-    /* Default accent: a single color that reads against dark bg */
+    /* Accent */
     --ws-accent: var(--ll-violet);
     --ws-accent-2: var(--ll-blue);
     --ws-accent-grad: linear-gradient(90deg, var(--ll-blue) 0%, var(--ll-violet) 55%, var(--ll-purple) 100%);
+    --ws-glow: rgba(123, 91, 201, 0.13);
 
-    --ws-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    /* Typography — display for headlines, DM Sans for UI/body, mono for code */
+    --ws-display: "Fraunces", Georgia, serif;
+    --ws-sans: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
     --ws-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
-    --ws-serif: "Source Serif 4", Georgia, serif;
+    --ws-serif: "Fraunces", Georgia, serif;
 
     --ws-body: var(--ws-sans);
     --ws-body-size: 16px;
-    --ws-body-tracking: -0.005em;
+    --ws-body-tracking: -0.01em;
   }
+
   html, body { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
   body {
-    background: #1a1a1c; /* canvas surround */
+    background: var(--ws-bg);
     font-family: var(--ws-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
   * { box-sizing: border-box; }
+
+  /* Film-grain noise overlay — gives depth to the dark bg */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    mix-blend-mode: screen;
+  }
+
+  /* Page entry — staggered fade-up */
+  @keyframes ws-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .ws-site {
+    background: var(--ws-bg);
+    color: var(--ws-fg);
+    min-height: 100%;
+    width: 100%;
+    animation: ws-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Sticky glass header */
+  .ws-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    background: rgba(9, 10, 17, 0.8);
+    border-bottom: 1px solid var(--ws-rule);
+  }
 
   /* Blinking caret */
   @keyframes ws-blink {
@@ -63,7 +107,7 @@
   .ws-caret { animation: ws-blink 1.05s steps(1, end) infinite; }
 
   /* Animated underline link */
-  .ws-link { position: relative; transition: color 200ms ease; }
+  .ws-link { position: relative; transition: color 180ms ease; }
   .ws-link::after {
     content: "";
     position: absolute;
@@ -72,18 +116,18 @@
     background: currentColor;
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 240ms ease;
+    transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
   }
   .ws-link:hover { color: var(--ws-fg) !important; }
   .ws-link:hover::after { transform: scaleX(1); }
 
   /* Selection */
   ::selection {
-    background: var(--ll-violet);
+    background: rgba(123, 91, 201, 0.45);
     color: #fff;
   }
 
-  /* Gradient text utility */
+  /* Gradient text */
   .ll-grad-text {
     background: var(--ws-accent-grad);
     -webkit-background-clip: text;
@@ -92,22 +136,31 @@
     color: transparent;
   }
 
-  /* Site root */
-  .ws-site {
-    background: var(--ws-bg);
-    color: var(--ws-fg);
-    min-height: 100%;
-    width: 100%;
+  /* Gradient-border tag pill */
+  .ws-tag {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 3px;
+    font-family: var(--ws-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+    color: var(--ws-dim);
+    background: linear-gradient(var(--ws-bg), var(--ws-bg)) padding-box,
+                var(--ws-accent-grad) border-box;
+    border: 1px solid transparent;
+    transition: color 150ms ease;
   }
+  .ws-tag:hover { color: var(--ws-fg); }
 
-  /* Scrollbar — subtle */
-  .ws-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  /* Subtle tinted scrollbar */
+  .ws-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
   .ws-scroll::-webkit-scrollbar-thumb {
-    background: rgba(230, 230, 227, 0.06);
-    border-radius: 0;
+    background: rgba(123, 91, 201, 0.18);
+    border-radius: 2px;
   }
   .ws-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(230, 230, 227, 0.12);
+    background: rgba(123, 91, 201, 0.32);
   }
   .ws-scroll::-webkit-scrollbar-track { background: transparent; }
 </style>
