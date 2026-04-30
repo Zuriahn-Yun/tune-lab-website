@@ -2,8 +2,21 @@
 
 const { useState, useEffect, useRef, useMemo } = React;
 
-// Centered column used across all sections
-const CENTER = { maxWidth: 1080, margin: "0 auto", padding: "0 40px" };
+// Responsive window width hook
+function useWindowWidth() {
+  const [w, setW] = useState(window.innerWidth);
+  useEffect(() => {
+    const fn = () => setW(window.innerWidth);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+  return w;
+}
+
+// Centered column — padding scales with screen width
+function center(w) {
+  return { maxWidth: 1080, margin: "0 auto", padding: w < 640 ? "0 20px" : w < 1024 ? "0 32px" : "0 40px" };
+}
 
 // ─────────────────────────────────────────────────────────────
 // Logo mark — inline SVG (network graph + waveforms)
@@ -78,6 +91,9 @@ function Wordmark({ size = 15, caret = true, withMark = true }) {
 // Header — sticky glass
 // ─────────────────────────────────────────────────────────────
 function Header({ route, navigate }) {
+  const vw = useWindowWidth();
+  const isMobile = vw < 640;
+
   const NavLink = ({ to, label }) => {
     const active = route.name === to || (to === "archive" && route.name === "post");
     return (
@@ -88,7 +104,7 @@ function Header({ route, navigate }) {
         style={{
           color: active ? "var(--ws-fg)" : "var(--ws-dim)",
           fontFamily: "var(--ws-mono)",
-          fontSize: 12,
+          fontSize: isMobile ? 11 : 12,
           letterSpacing: "0.04em",
           textDecoration: "none",
           padding: "4px 0",
@@ -99,13 +115,19 @@ function Header({ route, navigate }) {
       </a>
     );
   };
+
   return (
     <header className="ws-header">
-      <div style={{ ...CENTER, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 40px" }}>
+      <div style={{
+        ...center(vw),
+        maxWidth: "100%",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: isMobile ? "14px 20px" : "18px 40px",
+      }}>
         <a href="#" onClick={(e) => { e.preventDefault(); navigate({ name: "home" }); }} style={{ textDecoration: "none" }}>
-          <Wordmark size={15} caret={true} withMark={true} />
+          <Wordmark size={isMobile ? 13 : 15} caret={true} withMark={!isMobile} />
         </a>
-        <nav style={{ display: "flex", gap: 32 }}>
+        <nav style={{ display: "flex", gap: isMobile ? 18 : 32 }}>
           <NavLink to="home" label="index" />
           <NavLink to="archive" label="archive" />
           <NavLink to="about" label="about" />
@@ -119,6 +141,9 @@ function Header({ route, navigate }) {
 // Footer
 // ─────────────────────────────────────────────────────────────
 function Footer() {
+  const vw = useWindowWidth();
+  const isMobile = vw < 640;
+
   const [val, setVal] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | success | error
 
@@ -144,13 +169,13 @@ function Footer() {
   }
 
   return (
-    <footer style={{ borderTop: "1px solid var(--ws-rule)", marginTop: 112 }}>
+    <footer style={{ borderTop: "1px solid var(--ws-rule)", marginTop: isMobile ? 72 : 112 }}>
       <div style={{
-        ...CENTER,
-        padding: "56px 40px 44px",
+        ...center(vw),
+        padding: isMobile ? "40px 20px 32px" : "56px 40px 44px",
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: 48,
+        gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+        gap: isMobile ? 36 : 48,
         alignItems: "start",
       }}>
         <div>
@@ -174,7 +199,8 @@ function Footer() {
             onSubmit={handleSubscribe}
             style={{
               display: "flex", alignItems: "stretch",
-              borderBottom: "1px solid var(--ws-rule-strong)", maxWidth: 340,
+              borderBottom: "1px solid var(--ws-rule-strong)",
+              maxWidth: isMobile ? "100%" : 340,
             }}
           >
             <span style={{ color: "var(--ws-accent)", paddingRight: 10, alignSelf: "center", fontFamily: "var(--ws-mono)", fontSize: 13 }}>{">"}</span>
@@ -206,7 +232,7 @@ function Footer() {
         </div>
 
         <div style={{
-          gridColumn: "1 / -1", marginTop: 32, paddingTop: 20,
+          gridColumn: "1 / -1", marginTop: isMobile ? 16 : 32, paddingTop: 20,
           borderTop: "1px solid var(--ws-rule)",
           display: "flex", justifyContent: "space-between",
           fontFamily: "var(--ws-mono)", fontSize: 10, letterSpacing: "0.04em",
@@ -224,24 +250,32 @@ function Footer() {
 // Home
 // ─────────────────────────────────────────────────────────────
 function HomePage({ navigate }) {
+  const vw = useWindowWidth();
+  const isMobile = vw < 640;
+  const isTablet = vw < 1024;
   const recent = POSTS.slice(0, 3);
+
   return (
     <div>
       {/* ── Hero ── */}
-      <section style={{ padding: "108px 0 100px", borderBottom: "1px solid var(--ws-rule)", position: "relative", overflow: "hidden" }}>
+      <section style={{
+        padding: isMobile ? "64px 0 56px" : isTablet ? "88px 0 80px" : "108px 0 100px",
+        borderBottom: "1px solid var(--ws-rule)",
+        position: "relative", overflow: "hidden",
+      }}>
 
         {/* Ambient glow behind headline */}
         <div style={{
-          position: "absolute", top: "50%", left: "8%",
+          position: "absolute", top: "50%", left: isMobile ? "0%" : "8%",
           transform: "translateY(-50%)",
-          width: 680, height: 480,
+          width: isMobile ? "100%" : 680, height: 480,
           background: "radial-gradient(ellipse at 35% 50%, rgba(61,91,217,0.09) 0%, rgba(123,91,201,0.07) 45%, transparent 72%)",
           pointerEvents: "none",
         }} />
 
         {/* Decorative SVG motif — full section width */}
         <svg aria-hidden="true" viewBox="0 0 1440 500" preserveAspectRatio="xMidYMid slice" style={{
-          position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.2, pointerEvents: "none",
+          position: "absolute", inset: 0, width: "100%", height: "100%", opacity: isMobile ? 0.12 : 0.2, pointerEvents: "none",
         }}>
           <defs>
             <linearGradient id="hero-grad" x1="0" y1="250" x2="1440" y2="250" gradientUnits="userSpaceOnUse">
@@ -256,7 +290,6 @@ function HomePage({ navigate }) {
               <stop offset="1" stopColor="#1E2A78"/>
             </radialGradient>
           </defs>
-          {/* Left waveforms */}
           {[0,1,2,3,4,5,6,7].map(i => (
             <path key={`wl${i}`} d={`M0 250 Q 120 ${250-90-i*10} 240 250 T 480 250`}
               stroke="url(#hero-grad)" strokeWidth="0.8" fill="none" opacity={0.7-i*0.07}/>
@@ -265,7 +298,6 @@ function HomePage({ navigate }) {
             <path key={`wl2${i}`} d={`M0 250 Q 120 ${250+90+i*10} 240 250 T 480 250`}
               stroke="url(#hero-grad)" strokeWidth="0.8" fill="none" opacity={0.7-i*0.07}/>
           ))}
-          {/* Center network graph */}
           <g stroke="url(#hero-grad)" strokeWidth="1.4" opacity="0.9">
             <line x1="560" y1="250" x2="720" y2="140"/>
             <line x1="560" y1="250" x2="720" y2="360"/>
@@ -277,7 +309,6 @@ function HomePage({ navigate }) {
           {[[560,250],[720,140],[720,360],[880,250]].map(([x,y],i) => (
             <circle key={i} cx={x} cy={y} r="11" fill="url(#hero-node)"/>
           ))}
-          {/* Right waveforms */}
           {[0,1,2,3,4,5,6,7].map(i => (
             <path key={`wr${i}`} d={`M960 250 Q 1080 ${250-90-i*10} 1200 250 T 1440 250`}
               stroke="url(#hero-grad)" strokeWidth="0.8" fill="none" opacity={0.7-i*0.07}/>
@@ -288,10 +319,10 @@ function HomePage({ navigate }) {
           ))}
         </svg>
 
-        <div style={{ ...CENTER, position: "relative" }}>
+        <div style={{ ...center(vw), position: "relative" }}>
           <div style={{ maxWidth: 680 }}>
             {/* ADD: Status badge — short one-liner above the headline */}
-            <div style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", marginBottom: 36, letterSpacing: "0.07em" }}>
+            <div style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", marginBottom: isMobile ? 24 : 36, letterSpacing: "0.07em" }}>
               <span style={{ color: "var(--ws-accent)", marginRight: 10 }}>●</span>Lorem ipsum
             </div>
 
@@ -303,31 +334,31 @@ function HomePage({ navigate }) {
             <h1 style={{
               fontFamily: "var(--ws-display)",
               fontWeight: 300,
-              fontSize: 56,
+              fontSize: isMobile ? 34 : isTablet ? 44 : 56,
               lineHeight: 1.1,
               letterSpacing: "-0.02em",
               margin: 0,
               color: "var(--ws-fg)",
               textWrap: "balance",
             }}>
-              Lorem ipsum dolor sit amet, <span className="ll-grad-text">consectetur<br/>adipiscing</span> elit.
+              Lorem ipsum dolor sit amet, <span className="ll-grad-text">consectetur{!isMobile && <br/>}adipiscing</span> elit.
             </h1>
 
             {/* ADD: Hero subheading — 1–3 sentences about what this site publishes */}
             <p style={{
               fontFamily: "var(--ws-sans)",
               fontWeight: 300,
-              fontSize: 17,
+              fontSize: isMobile ? 15 : 17,
               lineHeight: 1.7,
               color: "var(--ws-dim)",
-              marginTop: 28,
+              marginTop: isMobile ? 20 : 28,
               maxWidth: 520,
             }}>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
             </p>
 
-            {/* CTAs — "read latest" hidden until at least one post exists */}
-            <div style={{ marginTop: 48, display: "flex", gap: 32, alignItems: "center" }}>
+            {/* CTAs */}
+            <div style={{ marginTop: isMobile ? 32 : 48, display: "flex", gap: isMobile ? 20 : 32, alignItems: "center" }}>
               {recent.length > 0 && (
                 <a href="#"
                    onClick={(e) => { e.preventDefault(); navigate({ name: "post", slug: recent[0].slug }); }}
@@ -357,9 +388,9 @@ function HomePage({ navigate }) {
       </section>
 
       {/* ── Recent posts ── */}
-      <section style={{ padding: "80px 0 0" }}>
-        <div style={CENTER}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 32 }}>
+      <section style={{ padding: isMobile ? "48px 0 0" : "80px 0 0" }}>
+        <div style={center(vw)}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: isMobile ? 20 : 32 }}>
             <div style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", letterSpacing: "0.08em" }}>
               // recent
             </div>
@@ -370,7 +401,6 @@ function HomePage({ navigate }) {
             </a>
           </div>
 
-          {/* Posts come from the POSTS array in content.jsx */}
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {recent.length > 0 ? (
               recent.map((p, i) => <PostRow key={p.slug} post={p} navigate={navigate} first={i === 0} />)
@@ -395,7 +425,10 @@ function HomePage({ navigate }) {
 // PostRow — list item used on Home
 // ─────────────────────────────────────────────────────────────
 function PostRow({ post, navigate, first }) {
+  const vw = useWindowWidth();
+  const isMobile = vw < 640;
   const [hover, setHover] = useState(false);
+
   return (
     <li
       onMouseEnter={() => setHover(true)}
@@ -411,20 +444,31 @@ function PostRow({ post, navigate, first }) {
         href="#"
         onClick={(e) => { e.preventDefault(); navigate({ name: "post", slug: post.slug }); }}
         style={{
-          display: "grid", gridTemplateColumns: "110px 1fr auto",
-          gap: 32, padding: "28px 4px 28px 16px", alignItems: "start",
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "110px 1fr auto",
+          gap: isMobile ? 0 : 32,
+          padding: isMobile ? "20px 4px 20px 16px" : "28px 4px 28px 16px",
+          alignItems: "start",
           textDecoration: "none", color: "inherit",
           transition: "background 200ms ease",
           background: hover ? "rgba(123,91,201,0.03)" : "transparent",
         }}
       >
-        <span style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", letterSpacing: "0.03em", paddingTop: 4 }}>
-          {fmtDateShort(post.date)}
-        </span>
+        {/* Date — shown as its own column on desktop, inline label on mobile */}
+        {!isMobile && (
+          <span style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", letterSpacing: "0.03em", paddingTop: 4 }}>
+            {fmtDateShort(post.date)}
+          </span>
+        )}
         <div>
+          {isMobile && (
+            <div style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-dim)", letterSpacing: "0.03em", marginBottom: 6 }}>
+              {fmtDateShort(post.date)}
+            </div>
+          )}
           <div style={{
             fontFamily: "var(--ws-display)", fontWeight: 300,
-            fontSize: 22, color: "var(--ws-fg)",
+            fontSize: isMobile ? 19 : 22, color: "var(--ws-fg)",
             letterSpacing: "-0.015em", lineHeight: 1.25, marginBottom: 10,
             transition: "color 180ms ease",
           }}>
@@ -435,19 +479,32 @@ function PostRow({ post, navigate, first }) {
               {post.title}
             </span>
           </div>
-          <div style={{ fontFamily: "var(--ws-sans)", fontWeight: 300, fontSize: 14, color: "var(--ws-dim)", lineHeight: 1.6, maxWidth: 580 }}>
+          <div style={{ fontFamily: "var(--ws-sans)", fontWeight: 300, fontSize: isMobile ? 13 : 14, color: "var(--ws-dim)", lineHeight: 1.6, maxWidth: 580 }}>
             {post.excerpt}
           </div>
+          {/* Tags inline on mobile */}
+          {isMobile && (post.tags || []).length > 0 && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+              {(post.tags || []).map(tag => (
+                <span key={tag} className="ws-tag">{tag}</span>
+              ))}
+              <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-dim)", opacity: 0.6, alignSelf: "center" }}>
+                · {calcReadTime(post.body)} min
+              </span>
+            </div>
+          )}
         </div>
-        {/* Tags + read time */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, paddingTop: 4 }}>
-          {(post.tags || []).map(tag => (
-            <span key={tag} className="ws-tag">{tag}</span>
-          ))}
-          <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-dim)", opacity: 0.6, marginTop: 2 }}>
-            {calcReadTime(post.body)} min
-          </span>
-        </div>
+        {/* Tags + read time column — desktop only */}
+        {!isMobile && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, paddingTop: 4 }}>
+            {(post.tags || []).map(tag => (
+              <span key={tag} className="ws-tag">{tag}</span>
+            ))}
+            <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-dim)", opacity: 0.6, marginTop: 2 }}>
+              {calcReadTime(post.body)} min
+            </span>
+          </div>
+        )}
       </a>
     </li>
   );
@@ -457,9 +514,12 @@ function PostRow({ post, navigate, first }) {
 // Archive
 // ─────────────────────────────────────────────────────────────
 function ArchivePage({ navigate }) {
+  const vw = useWindowWidth();
+  const isMobile = vw < 640;
+
   const [filter, setFilter] = useState("All");
   const filtered = filter === "All" ? POSTS : POSTS.filter(p => (p.tags || []).includes(filter));
-  const allTags = getAllTags(); // derived from posts in content.jsx
+  const allTags = getAllTags();
 
   const byYear = useMemo(() => {
     const m = {};
@@ -472,8 +532,8 @@ function ArchivePage({ navigate }) {
   const years = Object.keys(byYear).sort().reverse();
 
   return (
-    <div style={{ padding: "80px 0 0" }}>
-      <div style={{ ...CENTER, maxWidth: 960, margin: "0 auto" }}>
+    <div style={{ padding: isMobile ? "48px 0 0" : "80px 0 0" }}>
+      <div style={{ ...center(vw), maxWidth: 960, margin: "0 auto" }}>
 
         <div style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", marginBottom: 20, letterSpacing: "0.08em" }}>
           // archive
@@ -482,13 +542,12 @@ function ArchivePage({ navigate }) {
         {/* ADD: Archive page headline */}
         <h1 style={{
           fontFamily: "var(--ws-display)", fontWeight: 300,
-          fontSize: 38, letterSpacing: "-0.02em",
+          fontSize: isMobile ? 28 : 38, letterSpacing: "-0.02em",
           color: "var(--ws-fg)", margin: 0, marginBottom: 14,
         }}>
           Lorem ipsum dolor sit amet.
         </h1>
 
-        {/* Auto-updated as posts are added */}
         <p style={{
           fontFamily: "var(--ws-sans)", fontWeight: 300, fontSize: 15,
           color: "var(--ws-dim)", lineHeight: 1.6, margin: 0, marginBottom: 44,
@@ -498,7 +557,7 @@ function ArchivePage({ navigate }) {
             : "No posts yet — add your first entry to content.jsx."}
         </p>
 
-        {/* Filter chips — auto-derived from post tags */}
+        {/* Filter chips */}
         {allTags.length > 1 && (
           <div style={{ display: "flex", gap: 8, marginBottom: 56, paddingBottom: 28, borderBottom: "1px solid var(--ws-rule)", flexWrap: "wrap" }}>
             {allTags.map(tag => {
@@ -526,7 +585,6 @@ function ArchivePage({ navigate }) {
           </div>
         )}
 
-        {/* Grouped by year — auto-populates from content.jsx */}
         {years.length === 0 && (
           <div style={{
             padding: "52px 0", fontFamily: "var(--ws-mono)", fontSize: 12,
@@ -538,7 +596,7 @@ function ArchivePage({ navigate }) {
         )}
 
         {years.map(year => (
-          <section key={year} style={{ marginBottom: 72 }}>
+          <section key={year} style={{ marginBottom: isMobile ? 48 : 72 }}>
             <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: 28, marginBottom: 4, alignItems: "center" }}>
               <span style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", letterSpacing: "0.05em" }}>
                 {year} <span style={{ opacity: 0.4 }}>·</span> <span style={{ opacity: 0.6 }}>{byYear[year].length}</span>
@@ -556,7 +614,10 @@ function ArchivePage({ navigate }) {
 }
 
 function ArchiveRow({ post, navigate }) {
+  const vw = useWindowWidth();
+  const isMobile = vw < 640;
   const [hover, setHover] = useState(false);
+
   return (
     <li
       onMouseEnter={() => setHover(true)}
@@ -571,19 +632,31 @@ function ArchiveRow({ post, navigate }) {
         href="#"
         onClick={(e) => { e.preventDefault(); navigate({ name: "post", slug: post.slug }); }}
         style={{
-          display: "grid", gridTemplateColumns: "80px 1fr auto 52px",
-          gap: 28, padding: "18px 4px 18px 16px", alignItems: "baseline",
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr auto" : "80px 1fr auto 52px",
+          gap: isMobile ? 12 : 28,
+          padding: isMobile ? "16px 4px 16px 16px" : "18px 4px 18px 16px",
+          alignItems: "baseline",
           textDecoration: "none", color: "inherit",
           background: hover ? "rgba(123,91,201,0.03)" : "transparent",
           transition: "background 200ms ease",
         }}
       >
-        <span style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", letterSpacing: "0.02em" }}>
-          {post.date.slice(5)}
-        </span>
+        {/* Date column — desktop only */}
+        {!isMobile && (
+          <span style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", letterSpacing: "0.02em" }}>
+            {post.date.slice(5)}
+          </span>
+        )}
         <div>
+          {/* Date inline on mobile */}
+          {isMobile && (
+            <div style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-dim)", marginBottom: 4 }}>
+              {post.date.slice(5)}
+            </div>
+          )}
           <div style={{
-            fontFamily: "var(--ws-display)", fontWeight: 300, fontSize: 17,
+            fontFamily: "var(--ws-display)", fontWeight: 300, fontSize: isMobile ? 15 : 17,
             color: "var(--ws-fg)", letterSpacing: "-0.01em", marginBottom: 4,
           }}>
             <span style={{
@@ -597,13 +670,15 @@ function ArchiveRow({ post, navigate }) {
             {post.excerpt}
           </div>
         </div>
-        {/* Tags — from post.tags in content.jsx */}
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          {(post.tags || []).map(tag => (
-            <span key={tag} className="ws-tag">{tag}</span>
-          ))}
-        </div>
-        <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-dim)", textAlign: "right", opacity: 0.55 }}>
+        {/* Tags — hidden on mobile, shown on desktop */}
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {(post.tags || []).map(tag => (
+              <span key={tag} className="ws-tag">{tag}</span>
+            ))}
+          </div>
+        )}
+        <span style={{ fontFamily: "var(--ws-mono)", fontSize: 10, color: "var(--ws-dim)", textAlign: "right", opacity: 0.55, alignSelf: "start", paddingTop: isMobile ? 2 : 0 }}>
           {calcReadTime(post.body)}m
         </span>
       </a>
