@@ -195,6 +195,12 @@
 
 <div id="root"></div>
 
+<!-- Hidden form so Netlify detects it at deploy time (React renders the real one dynamically) -->
+<form name="subscribe" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="email" name="email" />
+  <input name="bot-field" />
+</form>
+
 <!-- React + Babel -->
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
@@ -263,7 +269,6 @@ function Site({ route, navigate, frameHeight }) {
       {route.name === "archive" && <ArchivePage navigate={navigate} />}
       {route.name === "post" && <PostPage slug={route.slug} navigate={navigate} />}
       {route.name === "about" && <AboutStub navigate={navigate} />}
-      {route.name === "rss" && <RssStub navigate={navigate} />}
       <Footer />
     </div>
   );
@@ -285,26 +290,6 @@ function AboutStub({ navigate }) {
     <p style={{ fontFamily: "var(--ws-sans)", fontSize: 15, lineHeight: 1.7, color: "var(--ws-dim)" }}>
       Reach us at <a className="ws-link" href="mailto:you@yourdomain.com" style={{ color: "var(--ws-accent)" }}>you@yourdomain.com</a>
     </p>
-  </div>;
-}
-function RssStub({ navigate }) {
-  return <div style={{ padding: "120px 56px", maxWidth: 640, margin: "0 auto" }}>
-    <div style={{ fontFamily: "var(--ws-mono)", fontSize: 12, color: "var(--ws-dim)", marginBottom: 16 }}>// rss</div>
-
-    {/* ADD: Replace the placeholder values below with your real site URL, title, and description.
-        When you have a real RSS feed, swap this stub for a link to /feed.xml or similar. */}
-    <pre style={{
-      fontFamily: "var(--ws-mono)", fontSize: 13, color: "var(--ws-fg)",
-      background: "rgba(255,255,255,0.012)", border: "1px solid var(--ws-rule)",
-      padding: "16px 20px", borderRadius: 4, overflow: "auto"
-    }}>{`<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-  <channel>
-    <title><!-- ADD: your site title --></title>
-    <link><!-- ADD: https://yourdomain.com --></link>
-    <description><!-- ADD: your site description --></description>
-  </channel>
-</rss>`}</pre>
   </div>;
 }
 

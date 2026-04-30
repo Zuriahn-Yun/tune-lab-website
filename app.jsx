@@ -109,7 +109,6 @@ function Header({ route, navigate }) {
           <NavLink to="home" label="index" />
           <NavLink to="archive" label="archive" />
           <NavLink to="about" label="about" />
-          <NavLink to="rss" label="rss" />
         </nav>
       </div>
     </header>
@@ -121,7 +120,29 @@ function Header({ route, navigate }) {
 // ─────────────────────────────────────────────────────────────
 function Footer() {
   const [val, setVal] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState("idle"); // idle | loading | success | error
+
+  async function handleSubscribe(e) {
+    e.preventDefault();
+    if (!val.includes("@")) return;
+    setStatus("loading");
+    try {
+      const res = await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ "form-name": "subscribe", email: val }).toString(),
+      });
+      if (res.ok) {
+        setStatus("success");
+        setVal("");
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+  }
+
   return (
     <footer style={{ borderTop: "1px solid var(--ws-rule)", marginTop: 112 }}>
       <div style={{
@@ -141,7 +162,7 @@ function Footer() {
             Lorem ipsum dolor sit amet, consectetur adipiscing elit.
           </div>
           <div style={{ marginTop: 28, display: "flex", gap: 20 }}>
-            {["rss", "github", "archive"].map(l => (
+            {["github", "archive"].map(l => (
               <a key={l} className="ws-link" href="#" style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", letterSpacing: "0.04em" }}>{l}</a>
             ))}
           </div>
@@ -150,7 +171,7 @@ function Footer() {
         <div>
           <div style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", marginBottom: 16, letterSpacing: "0.06em" }}>// subscribe</div>
           <form
-            onSubmit={(e) => { e.preventDefault(); if (val.includes("@")) setSubmitted(true); }}
+            onSubmit={handleSubscribe}
             style={{
               display: "flex", alignItems: "stretch",
               borderBottom: "1px solid var(--ws-rule-strong)", maxWidth: 340,
@@ -159,30 +180,29 @@ function Footer() {
             <span style={{ color: "var(--ws-accent)", paddingRight: 10, alignSelf: "center", fontFamily: "var(--ws-mono)", fontSize: 13 }}>{">"}</span>
             <input
               type="email"
-              placeholder={submitted ? "subscribed." : "you@domain.tld"}
-              value={submitted ? "" : val}
-              onChange={(e) => setVal(e.target.value)}
-              disabled={submitted}
+              placeholder={status === "success" ? "subscribed." : "you@domain.tld"}
+              value={val}
+              onChange={(e) => { setVal(e.target.value); if (status === "error") setStatus("idle"); }}
+              disabled={status === "loading" || status === "success"}
               style={{
                 flex: 1, background: "transparent", border: "none", outline: "none",
-                color: "var(--ws-fg)", fontFamily: "var(--ws-mono)", fontSize: 13, padding: "12px 0",
+                color: status === "error" ? "#e05c5c" : "var(--ws-fg)",
+                fontFamily: "var(--ws-mono)", fontSize: 13, padding: "12px 0",
               }}
             />
-            <button type="submit" style={{
-              background: "transparent", border: "none", color: "var(--ws-dim)",
+            <button type="submit" disabled={status === "loading" || status === "success"} style={{
+              background: "transparent", border: "none",
+              color: status === "error" ? "#e05c5c" : "var(--ws-dim)",
               fontFamily: "var(--ws-mono)", fontSize: 11, letterSpacing: "0.04em",
-              padding: "12px 0 12px 16px", cursor: "pointer",
+              padding: "12px 0 12px 16px", cursor: status === "loading" ? "wait" : "pointer",
               transition: "color 150ms ease",
             }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--ws-fg)"}
-              onMouseLeave={e => e.currentTarget.style.color = "var(--ws-dim)"}
+              onMouseLeave={e => e.currentTarget.style.color = status === "error" ? "#e05c5c" : "var(--ws-dim)"}
             >
-              {submitted ? "✓" : "send →"}
+              {status === "loading" ? "…" : status === "success" ? "✓" : status === "error" ? "retry →" : "send →"}
             </button>
           </form>
-          <div style={{ marginTop: 12, fontFamily: "var(--ws-mono)", fontSize: 10, letterSpacing: "0.03em", color: "var(--ws-dim)", opacity: 0.6 }}>
-            One short email per post. No tracking, unsubscribe anytime.
-          </div>
         </div>
 
         <div style={{
@@ -219,15 +239,15 @@ function HomePage({ navigate }) {
           pointerEvents: "none",
         }} />
 
-        {/* Decorative SVG motif */}
-        <svg aria-hidden="true" width="720" height="360" viewBox="0 0 780 380" style={{
-          position: "absolute", right: -60, top: 50, opacity: 0.18, pointerEvents: "none",
+        {/* Decorative SVG motif — full section width */}
+        <svg aria-hidden="true" viewBox="0 0 1440 500" preserveAspectRatio="xMidYMid slice" style={{
+          position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.2, pointerEvents: "none",
         }}>
           <defs>
-            <linearGradient id="hero-grad" x1="0" y1="190" x2="780" y2="190" gradientUnits="userSpaceOnUse">
+            <linearGradient id="hero-grad" x1="0" y1="250" x2="1440" y2="250" gradientUnits="userSpaceOnUse">
               <stop offset="0" stopColor="#1E2A78"/>
-              <stop offset="0.45" stopColor="#3D5BD9"/>
-              <stop offset="0.75" stopColor="#7B5BC9"/>
+              <stop offset="0.35" stopColor="#3D5BD9"/>
+              <stop offset="0.65" stopColor="#7B5BC9"/>
               <stop offset="1" stopColor="#9B4DC9"/>
             </linearGradient>
             <radialGradient id="hero-node" cx="0" cy="0" r="1" gradientTransform="scale(20)">
@@ -236,32 +256,35 @@ function HomePage({ navigate }) {
               <stop offset="1" stopColor="#1E2A78"/>
             </radialGradient>
           </defs>
+          {/* Left waveforms */}
           {[0,1,2,3,4,5,6,7].map(i => (
-            <path key={`wl${i}`} d={`M0 190 Q 80 ${190-70-i*8} 160 190 T 320 190`}
-              stroke="url(#hero-grad)" strokeWidth="0.7" fill="none" opacity={0.7-i*0.07}/>
+            <path key={`wl${i}`} d={`M0 250 Q 120 ${250-90-i*10} 240 250 T 480 250`}
+              stroke="url(#hero-grad)" strokeWidth="0.8" fill="none" opacity={0.7-i*0.07}/>
           ))}
           {[0,1,2,3,4,5,6,7].map(i => (
-            <path key={`wl2${i}`} d={`M0 190 Q 80 ${190+70+i*8} 160 190 T 320 190`}
-              stroke="url(#hero-grad)" strokeWidth="0.7" fill="none" opacity={0.7-i*0.07}/>
+            <path key={`wl2${i}`} d={`M0 250 Q 120 ${250+90+i*10} 240 250 T 480 250`}
+              stroke="url(#hero-grad)" strokeWidth="0.8" fill="none" opacity={0.7-i*0.07}/>
           ))}
-          <g stroke="url(#hero-grad)" strokeWidth="1.2" opacity="0.9">
-            <line x1="280" y1="190" x2="380" y2="110"/>
-            <line x1="280" y1="190" x2="380" y2="270"/>
-            <line x1="380" y1="110" x2="480" y2="190"/>
-            <line x1="380" y1="270" x2="480" y2="190"/>
-            <line x1="380" y1="110" x2="380" y2="270"/>
-            <line x1="280" y1="190" x2="480" y2="190"/>
+          {/* Center network graph */}
+          <g stroke="url(#hero-grad)" strokeWidth="1.4" opacity="0.9">
+            <line x1="560" y1="250" x2="720" y2="140"/>
+            <line x1="560" y1="250" x2="720" y2="360"/>
+            <line x1="720" y1="140" x2="880" y2="250"/>
+            <line x1="720" y1="360" x2="880" y2="250"/>
+            <line x1="720" y1="140" x2="720" y2="360"/>
+            <line x1="560" y1="250" x2="880" y2="250"/>
           </g>
-          {[[280,190],[380,110],[380,270],[480,190]].map(([x,y],i) => (
-            <circle key={i} cx={x} cy={y} r="9" fill="url(#hero-node)"/>
+          {[[560,250],[720,140],[720,360],[880,250]].map(([x,y],i) => (
+            <circle key={i} cx={x} cy={y} r="11" fill="url(#hero-node)"/>
+          ))}
+          {/* Right waveforms */}
+          {[0,1,2,3,4,5,6,7].map(i => (
+            <path key={`wr${i}`} d={`M960 250 Q 1080 ${250-90-i*10} 1200 250 T 1440 250`}
+              stroke="url(#hero-grad)" strokeWidth="0.8" fill="none" opacity={0.7-i*0.07}/>
           ))}
           {[0,1,2,3,4,5,6,7].map(i => (
-            <path key={`wr${i}`} d={`M460 190 Q 540 ${190-70-i*8} 620 190 T 780 190`}
-              stroke="url(#hero-grad)" strokeWidth="0.7" fill="none" opacity={0.7-i*0.07}/>
-          ))}
-          {[0,1,2,3,4,5,6,7].map(i => (
-            <path key={`wr2${i}`} d={`M460 190 Q 540 ${190+70+i*8} 620 190 T 780 190`}
-              stroke="url(#hero-grad)" strokeWidth="0.7" fill="none" opacity={0.7-i*0.07}/>
+            <path key={`wr2${i}`} d={`M960 250 Q 1080 ${250+90+i*10} 1200 250 T 1440 250`}
+              stroke="url(#hero-grad)" strokeWidth="0.8" fill="none" opacity={0.7-i*0.07}/>
           ))}
         </svg>
 
@@ -269,7 +292,7 @@ function HomePage({ navigate }) {
           <div style={{ maxWidth: 680 }}>
             {/* ADD: Status badge — short one-liner above the headline */}
             <div style={{ fontFamily: "var(--ws-mono)", fontSize: 11, color: "var(--ws-dim)", marginBottom: 36, letterSpacing: "0.07em" }}>
-              <span style={{ color: "var(--ws-accent)", marginRight: 10 }}>●</span>Lorem ipsum · est. 2025
+              <span style={{ color: "var(--ws-accent)", marginRight: 10 }}>●</span>Lorem ipsum
             </div>
 
             {/*
