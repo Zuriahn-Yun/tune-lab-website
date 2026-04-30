@@ -155,8 +155,9 @@ function Footer() {
         <div style={{ marginBottom: 14 }}>
           <Wordmark size={13} caret={false} withMark={true} />
         </div>
+        {/* ADD: Your site tagline (shown in the footer, keep it to 1–2 lines) */}
         <div style={{ lineHeight: 1.7, maxWidth: 320 }}>
-          Field notes from the lab — fine-tuning, evaluation, and inference for open-weight LLMs.
+          Your site tagline goes here.
         </div>
         <div style={{ marginTop: 24, display: "flex", gap: 18 }}>
           <a className="ws-link" href="#" style={{ color: "var(--ws-dim)" }}>rss</a>
@@ -219,8 +220,8 @@ function Footer() {
         fontSize: 11,
         opacity: 0.55,
       }}>
-        <span>© 2026 llm tune lab</span>
-        <span>v0.4.2 · last build 2026-04-21 14:02 UTC</span>
+        {/* ADD: Update the copyright year and name as needed */}
+        <span>© {new Date().getFullYear()} LLM Tune Lab</span>
       </div>
     </footer>
   );
@@ -313,6 +314,7 @@ function HomePage({ navigate }) {
         </svg>
 
         <div style={{ maxWidth: 720, position: "relative" }}>
+          {/* ADD: Status badge — short one-liner shown above the headline, e.g. "the lab is open · est. 2025" */}
           <div style={{
             fontFamily: "var(--ws-mono)",
             fontSize: 12,
@@ -320,8 +322,15 @@ function HomePage({ navigate }) {
             marginBottom: 32,
             letterSpacing: "0.04em",
           }}>
-            <span style={{ color: "var(--ws-accent)" }}>●</span> &nbsp; the lab is open · est. 2025
+            <span style={{ color: "var(--ws-accent)" }}>●</span> &nbsp; {/* your status badge text */}
           </div>
+
+          {/*
+            ADD: Hero headline.
+            Wrap the key phrase in <span className="ll-grad-text">…</span> to apply
+            the indigo → violet gradient. Example:
+              Your site is about <span className="ll-grad-text">something<br/>important</span> here.
+          */}
           <h1 style={{
             fontFamily: "var(--ws-sans)",
             fontSize: 44,
@@ -332,8 +341,10 @@ function HomePage({ navigate }) {
             color: "var(--ws-fg)",
             textWrap: "balance",
           }}>
-            Field notes from <span className="ll-grad-text">tuning, evaluating,<br/>and serving</span> open-weight LLMs.
+            Your <span className="ll-grad-text">hero headline</span> goes here.
           </h1>
+
+          {/* ADD: Hero subheading — 1–3 sentences describing what this site publishes */}
           <p style={{
             fontFamily: "var(--ws-sans)",
             fontSize: 16,
@@ -342,8 +353,10 @@ function HomePage({ navigate }) {
             marginTop: 28,
             maxWidth: 560,
           }}>
-            LoRA recipes, evaluation harnesses, quantization trade-offs, and the parts of the stack that don't make it into the announcement posts. Published when there's something measured to say.
+            Your site description goes here. Explain what you write about and who it's for.
           </p>
+
+          {/* CTA links — "read latest" is hidden until at least one post exists */}
           <div style={{
             marginTop: 44,
             display: "flex",
@@ -352,10 +365,12 @@ function HomePage({ navigate }) {
             fontFamily: "var(--ws-mono)",
             fontSize: 13,
           }}>
-            <a href="#" onClick={(e) => { e.preventDefault(); navigate({ name: "post", slug: recent[0].slug }); }}
-               className="ws-link" style={{ color: "var(--ws-fg)" }}>
-              read latest →
-            </a>
+            {recent.length > 0 && (
+              <a href="#" onClick={(e) => { e.preventDefault(); navigate({ name: "post", slug: recent[0].slug }); }}
+                 className="ws-link" style={{ color: "var(--ws-fg)" }}>
+                read latest →
+              </a>
+            )}
             <a href="#" onClick={(e) => { e.preventDefault(); navigate({ name: "archive" }); }}
                className="ws-link" style={{ color: "var(--ws-dim)" }}>
               browse archive
@@ -393,10 +408,25 @@ function HomePage({ navigate }) {
             all posts ({POSTS.length}) →
           </a>
         </div>
+        {/* Posts are populated from the POSTS array in content.jsx */}
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {recent.map((p, i) => (
-            <PostRow key={p.slug} post={p} navigate={navigate} first={i === 0} />
-          ))}
+          {recent.length > 0 ? (
+            recent.map((p, i) => (
+              <PostRow key={p.slug} post={p} navigate={navigate} first={i === 0} />
+            ))
+          ) : (
+            <li style={{
+              padding: "40px 4px",
+              borderTop: "1px solid var(--ws-rule)",
+              borderBottom: "1px solid var(--ws-rule)",
+              fontFamily: "var(--ws-mono)",
+              fontSize: 13,
+              color: "var(--ws-dim)",
+            }}>
+              {/* This message shows until you add posts to content.jsx */}
+              no posts yet — add your first entry to <code style={{ color: "var(--ws-accent)" }}>content.jsx</code>
+            </li>
+          )}
         </ul>
       </section>
     </div>
@@ -525,6 +555,7 @@ function ArchivePage({ navigate }) {
         }}>
           // archive
         </div>
+        {/* ADD: Archive page headline — keep it short, e.g. "Everything we've published." */}
         <h1 style={{
           fontFamily: "var(--ws-sans)",
           fontSize: 32,
@@ -536,6 +567,7 @@ function ArchivePage({ navigate }) {
         }}>
           Everything we've published.
         </h1>
+        {/* This subtitle updates automatically as you add posts to content.jsx */}
         <p style={{
           fontFamily: "var(--ws-sans)",
           fontSize: 15,
@@ -545,7 +577,9 @@ function ArchivePage({ navigate }) {
           marginBottom: 40,
           maxWidth: 540,
         }}>
-          {POSTS.length} posts across {CATEGORIES.length - 1} categories, sorted newest first.
+          {POSTS.length > 0
+            ? `${POSTS.length} post${POSTS.length === 1 ? "" : "s"} · sorted newest first.`
+            : "No posts yet — add your first entry to content.jsx."}
         </p>
 
         {/* Filter chips */}
@@ -583,7 +617,19 @@ function ArchivePage({ navigate }) {
           })}
         </div>
 
-        {/* Grouped list */}
+        {/* Grouped list — auto-groups by year as you add posts to content.jsx */}
+        {years.length === 0 && (
+          <div style={{
+            padding: "48px 0",
+            fontFamily: "var(--ws-mono)",
+            fontSize: 13,
+            color: "var(--ws-dim)",
+            borderTop: "1px solid var(--ws-rule)",
+          }}>
+            {/* Shown until posts exist */}
+            no posts yet — add your first entry to <code style={{ color: "var(--ws-accent)" }}>content.jsx</code>
+          </div>
+        )}
         {years.map(year => (
           <section key={year} style={{ marginBottom: 64 }}>
             <div style={{

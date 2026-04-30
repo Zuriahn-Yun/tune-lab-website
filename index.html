@@ -193,17 +193,24 @@ function Site({ route, navigate, frameHeight }) {
 function AboutStub({ navigate }) {
   return <div style={{ padding: "120px 56px", maxWidth: 640, margin: "0 auto" }}>
     <div style={{ fontFamily: "var(--ws-mono)", fontSize: 12, color: "var(--ws-dim)", marginBottom: 16 }}>// about</div>
+
+    {/* ADD: Who you are and what this site covers — 1–3 short paragraphs */}
     <p style={{ fontFamily: "var(--ws-sans)", fontSize: 17, lineHeight: 1.7, color: "var(--ws-fg)" }}>
-      LLM Tune Lab is a working journal by a small group of engineers fine-tuning, evaluating, and serving open-weight language models. We publish when we have measurements worth sharing.
+      Your about page content goes here. Describe who you are and what this site covers.
     </p>
+
+    {/* ADD: Contact info — update the href and display text with your real email */}
     <p style={{ fontFamily: "var(--ws-sans)", fontSize: 15, lineHeight: 1.7, color: "var(--ws-dim)" }}>
-      Reach us at <a className="ws-link" href="#" style={{ color: "var(--ws-accent)" }}>hi@llmtunelab.dev</a> or via the contact link in the footer.
+      Reach us at <a className="ws-link" href="mailto:you@yourdomain.com" style={{ color: "var(--ws-accent)" }}>you@yourdomain.com</a>
     </p>
   </div>;
 }
 function RssStub({ navigate }) {
   return <div style={{ padding: "120px 56px", maxWidth: 640, margin: "0 auto" }}>
     <div style={{ fontFamily: "var(--ws-mono)", fontSize: 12, color: "var(--ws-dim)", marginBottom: 16 }}>// rss</div>
+
+    {/* ADD: Replace the placeholder values below with your real site URL, title, and description.
+        When you have a real RSS feed, swap this stub for a link to /feed.xml or similar. */}
     <pre style={{
       fontFamily: "var(--ws-mono)", fontSize: 13, color: "var(--ws-fg)",
       background: "rgba(255,255,255,0.012)", border: "1px solid var(--ws-rule)",
@@ -211,10 +218,9 @@ function RssStub({ navigate }) {
     }}>{`<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>llm tune lab</title>
-    <link>https://llmtunelab.dev</link>
-    <description>Field notes on fine-tuning, evaluating, and serving open-weight LLMs.</description>
-    ...
+    <title><!-- ADD: your site title --></title>
+    <link><!-- ADD: https://yourdomain.com --></link>
+    <description><!-- ADD: your site description --></description>
   </channel>
 </rss>`}</pre>
   </div>;
