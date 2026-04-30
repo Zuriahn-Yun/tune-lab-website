@@ -111,6 +111,32 @@
   }
   .ws-scroll::-webkit-scrollbar-track { background: transparent; }
 </style>
+
+<!--
+  ANALYTICS — ADD YOUR TRACKING SCRIPT HERE
+  ─────────────────────────────────────────
+  Options (all free at basic tier):
+
+  Plausible (privacy-friendly, no cookies):
+    <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js"></script>
+
+  Umami (self-hosted or cloud, GDPR-friendly):
+    <script async src="https://analytics.umami.is/script.js" data-website-id="YOUR-ID"></script>
+
+  Google Analytics 4:
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXX');
+    </script>
+
+  Netlify Analytics: enable in Netlify dashboard → Site settings → Analytics ($9/mo).
+  No script needed — Netlify tracks server-side.
+
+  GitHub Pages does not include built-in analytics.
+-->
 </head>
 <body>
 
@@ -196,7 +222,10 @@ function AboutStub({ navigate }) {
 
     {/* ADD: Who you are and what this site covers — 1–3 short paragraphs */}
     <p style={{ fontFamily: "var(--ws-sans)", fontSize: 17, lineHeight: 1.7, color: "var(--ws-fg)" }}>
-      Your about page content goes here. Describe who you are and what this site covers.
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+    </p>
+    <p style={{ fontFamily: "var(--ws-sans)", fontSize: 15, lineHeight: 1.7, color: "var(--ws-dim)" }}>
+      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
     </p>
 
     {/* ADD: Contact info — update the href and display text with your real email */}

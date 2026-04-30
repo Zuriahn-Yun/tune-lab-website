@@ -236,11 +236,8 @@ function PostPage({ slug, navigate }) {
   return (
     <article>
       {/* Header */}
-      <header style={{
-        padding: "80px 56px 48px",
-        borderBottom: "1px solid var(--ws-rule)",
-      }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+      <header style={{ padding: "80px 0 48px", borderBottom: "1px solid var(--ws-rule)" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 40px" }}>
           <a
             href="#"
             onClick={(e) => { e.preventDefault(); navigate({ name: "archive" }); }}
@@ -264,7 +261,7 @@ function PostPage({ slug, navigate }) {
             textTransform: "uppercase",
             marginBottom: 18,
           }}>
-            {post.category}
+            {(post.tags || []).join(" · ")}
           </div>
           <h1 style={{
             fontFamily: "var(--ws-sans)",
@@ -289,21 +286,22 @@ function PostPage({ slug, navigate }) {
           }}>
             <span><span style={{ opacity: 0.6 }}>by</span> {post.author}</span>
             <span>{post.date}</span>
-            <span>{post.reading} min read</span>
+            <span>{calcReadTime(post.body)} min read</span>
           </div>
         </div>
       </header>
 
       {/* Body */}
-      <div style={{ padding: "56px 56px 0" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <PostBody blocks={POST_BODY} />
+      <div style={{ padding: "56px 0 0" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 40px" }}>
+          {/* Body blocks come from post.body in content.jsx */}
+          <PostBody blocks={post.body || []} />
         </div>
       </div>
 
       {/* Prev / Next */}
-      <div style={{ padding: "64px 56px 0" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+      <div style={{ padding: "64px 0 0" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 40px" }}>
           <div style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
