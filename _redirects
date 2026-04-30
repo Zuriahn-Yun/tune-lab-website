@@ -1,0 +1,3 @@
+# Netlify redirects — fallback unknown paths to the homepage so client-side
+# routing (archive, post, about, rss) works on direct links and refreshes.
+/*    /index.html   200

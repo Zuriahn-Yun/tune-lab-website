@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LLM Tune Lab — field notes on fine-tuning, evaluating & serving open-weight LLMs</title>
+<meta name="description" content="LLM Tune Lab — field notes on fine-tuning, evaluating, and serving open-weight large language models. Quantization, inference, and the parts of the stack that don't make it into announcement posts.">
+<meta name="theme-color" content="#0B0C14">
+<meta property="og:title" content="LLM Tune Lab">
+<meta property="og:description" content="Field notes on fine-tuning, evaluating, and serving open-weight LLMs.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/assets/llm-tune-lab-logo.png">
+<link rel="icon" type="image/svg+xml" href="/assets/llm-tune-lab-mark-small.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    /* Dark mode rebrand: deeper, slightly cool — picks up logo's indigo cast */
+    --ws-bg: #0B0C14;
+    --ws-bg-2: #11132066;
+    --ws-fg: #E8EAF6;
+    --ws-dim: #8A8FB0;
+    --ws-dim2: #5A5F7E;
+    --ws-rule: rgba(232, 234, 246, 0.08);
+
+    /* Logo palette */
+    --ll-indigo-deep: #1E2A78;
+    --ll-blue: #3D5BD9;
+    --ll-violet: #7B5BC9;
+    --ll-purple: #9B4DC9;
+    --ll-cyan: #6BB8E8;
+
+    /* Default accent: a single color that reads against dark bg */
+    --ws-accent: var(--ll-violet);
+    --ws-accent-2: var(--ll-blue);
+    --ws-accent-grad: linear-gradient(90deg, var(--ll-blue) 0%, var(--ll-violet) 55%, var(--ll-purple) 100%);
+
+    --ws-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    --ws-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --ws-serif: "Source Serif 4", Georgia, serif;
+
+    --ws-body: var(--ws-sans);
+    --ws-body-size: 16px;
+    --ws-body-tracking: -0.005em;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #1a1a1c; /* canvas surround */
+    font-family: var(--ws-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  * { box-sizing: border-box; }
+
+  /* Blinking caret */
+  @keyframes ws-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+  .ws-caret { animation: ws-blink 1.05s steps(1, end) infinite; }
+
+  /* Animated underline link */
+  .ws-link { position: relative; transition: color 200ms ease; }
+  .ws-link::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -2px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 240ms ease;
+  }
+  .ws-link:hover { color: var(--ws-fg) !important; }
+  .ws-link:hover::after { transform: scaleX(1); }
+
+  /* Selection */
+  ::selection {
+    background: var(--ll-violet);
+    color: #fff;
+  }
+
+  /* Gradient text utility */
+  .ll-grad-text {
+    background: var(--ws-accent-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Site root */
+  .ws-site {
+    background: var(--ws-bg);
+    color: var(--ws-fg);
+    min-height: 100%;
+    width: 100%;
+  }
+
+  /* Scrollbar — subtle */
+  .ws-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .ws-scroll::-webkit-scrollbar-thumb {
+    background: rgba(230, 230, 227, 0.06);
+    border-radius: 0;
+  }
+  .ws-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(230, 230, 227, 0.12);
+  }
+  .ws-scroll::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Components -->
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="browser-window.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="content.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+<script type="text/babel" src="post.jsx"></script>
+
+<!-- Main -->
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "gradient",
+  "bodyFont": "sans",
+  "showCaret": true,
+  "compactSpacing": false,
+  "view": "canvas"
+}/*EDITMODE-END*/;
+
+const ACCENT_PRESETS = {
+  gradient: { value: "var(--ll-violet)", label: "gradient" },
+  indigo:   { value: "#3D5BD9", label: "indigo" },
+  violet:   { value: "#7B5BC9", label: "violet" },
+  purple:   { value: "#9B4DC9", label: "purple" },
+};
+
+function applyTheme(t) {
+  const root = document.documentElement;
+  const preset = ACCENT_PRESETS[t.accent] || ACCENT_PRESETS.gradient;
+  root.style.setProperty("--ws-accent", preset.value);
+  // gradient stays the same for the gradient option; for solids, collapse it
+  if (t.accent === "gradient") {
+    root.style.setProperty("--ws-accent-grad", "linear-gradient(90deg, #3D5BD9 0%, #7B5BC9 55%, #9B4DC9 100%)");
+  } else {
+    root.style.setProperty("--ws-accent-grad", `linear-gradient(90deg, ${preset.value}, ${preset.value})`);
+  }
+  if (t.bodyFont === "serif") {
+    root.style.setProperty("--ws-body", "var(--ws-serif)");
+    root.style.setProperty("--ws-body-size", "17px");
+    root.style.setProperty("--ws-body-tracking", "0em");
+  } else {
+    root.style.setProperty("--ws-body", "var(--ws-sans)");
+    root.style.setProperty("--ws-body-size", "16px");
+    root.style.setProperty("--ws-body-tracking", "-0.005em");
+  }
+}
+
+// ── Inner site shell — receives a route ──
+function Site({ route, navigate, frameHeight }) {
+  // reset scroll on route change
+  const scrollRef = React.useRef(null);
+  React.useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [route.name, route.slug]);
+
+  return (
+    <div ref={scrollRef} className="ws-site ws-scroll" style={{ height: frameHeight, overflowY: "auto" }}>
+      <Header route={route} navigate={navigate} />
+      {route.name === "home" && <HomePage navigate={navigate} />}
+      {route.name === "archive" && <ArchivePage navigate={navigate} />}
+      {route.name === "post" && <PostPage slug={route.slug} navigate={navigate} />}
+      {route.name === "about" && <AboutStub navigate={navigate} />}
+      {route.name === "rss" && <RssStub navigate={navigate} />}
+      <Footer />
+    </div>
+  );
+}
+
+function AboutStub({ navigate }) {
+  return <div style={{ padding: "120px 56px", maxWidth: 640, margin: "0 auto" }}>
+    <div style={{ fontFamily: "var(--ws-mono)", fontSize: 12, color: "var(--ws-dim)", marginBottom: 16 }}>// about</div>
+    <p style={{ fontFamily: "var(--ws-sans)", fontSize: 17, lineHeight: 1.7, color: "var(--ws-fg)" }}>
+      LLM Tune Lab is a working journal by a small group of engineers fine-tuning, evaluating, and serving open-weight language models. We publish when we have measurements worth sharing.
+    </p>
+    <p style={{ fontFamily: "var(--ws-sans)", fontSize: 15, lineHeight: 1.7, color: "var(--ws-dim)" }}>
+      Reach us at <a className="ws-link" href="#" style={{ color: "var(--ws-accent)" }}>hi@llmtunelab.dev</a> or via the contact link in the footer.
+    </p>
+  </div>;
+}
+function RssStub({ navigate }) {
+  return <div style={{ padding: "120px 56px", maxWidth: 640, margin: "0 auto" }}>
+    <div style={{ fontFamily: "var(--ws-mono)", fontSize: 12, color: "var(--ws-dim)", marginBottom: 16 }}>// rss</div>
+    <pre style={{
+      fontFamily: "var(--ws-mono)", fontSize: 13, color: "var(--ws-fg)",
+      background: "rgba(255,255,255,0.012)", border: "1px solid var(--ws-rule)",
+      padding: "16px 20px", borderRadius: 4, overflow: "auto"
+    }}>{`<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>llm tune lab</title>
+    <link>https://llmtunelab.dev</link>
+    <description>Field notes on fine-tuning, evaluating, and serving open-weight LLMs.</description>
+    ...
+  </channel>
+</rss>`}</pre>
+  </div>;
+}
+
+// ── Per-frame app instance ──
+function FrameApp({ initialRoute, frameHeight }) {
+  const [route, setRoute] = useState(initialRoute);
+  return <Site route={route} navigate={setRoute} frameHeight={frameHeight} />;
+}
+
+// ── URL bar text per route ──
+function urlFor(route) {
+  if (route.name === "home") return "llmtunelab.dev";
+  if (route.name === "archive") return "llmtunelab.dev/archive";
+  if (route.name === "post") return `llmtunelab.dev/p/${route.slug}`;
+  return `llmtunelab.dev/${route.name}`;
+}
+
+// ── Wraps Chrome window with reactive URL ──
+function FramedSite({ initialRoute, width, height }) {
+  const [route, setRoute] = useState(initialRoute);
+  const innerHeight = height - 84; // chrome bars
+
+  return (
+    <ChromeWindow
+      tabs={[{ title: "llm tune lab — " + (route.name === "post" ? "post" : route.name) }]}
+      activeIndex={0}
+      url={urlFor(route)}
+      width={width}
+      height={height}
+    >
+      <div style={{ background: "var(--ws-bg)", height: innerHeight }}>
+        <Site route={route} navigate={setRoute} frameHeight={innerHeight} />
+      </div>
+    </ChromeWindow>
+  );
+}
+
+// ── Root ──
+function Root() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  useEffect(() => { applyTheme(tweaks); }, [tweaks.accent, tweaks.bodyFont]);
+
+  // single full-bleed view (toggleable via tweak)
+  const isSingle = tweaks.view === "single";
+
+  return (
+    <div style={{ minHeight: "100vh" }}>
+      {isSingle ? (
+        <SingleView />
+      ) : (
+        <DesignCanvas>
+          <DCSection id="llm-tune-lab" title="LLM Tune Lab" subtitle="Three-page blog · dark, gradient brand · Apr 2026">
+            <DCArtboard id="home" label="01 · Homepage" width={1200} height={900}>
+              <FramedSite initialRoute={{ name: "home" }} width={1200} height={900} />
+            </DCArtboard>
+            <DCArtboard id="archive" label="02 · Archive" width={1200} height={900}>
+              <FramedSite initialRoute={{ name: "archive" }} width={1200} height={900} />
+            </DCArtboard>
+            <DCArtboard id="post" label="03 · Post" width={1200} height={900}>
+              <FramedSite initialRoute={{ name: "post", slug: POSTS[0].slug }} width={1200} height={900} />
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      )}
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="theme">
+          <TweakRadio
+            label="accent"
+            value={tweaks.accent}
+            onChange={(v) => setTweak("accent", v)}
+            options={[
+              { value: "gradient", label: "gradient" },
+              { value: "indigo", label: "indigo" },
+              { value: "violet", label: "violet" },
+              { value: "purple", label: "purple" },
+            ]}
+          />
+          <TweakRadio
+            label="post body"
+            value={tweaks.bodyFont}
+            onChange={(v) => setTweak("bodyFont", v)}
+            options={[
+              { value: "sans", label: "sans" },
+              { value: "serif", label: "serif" },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="view">
+          <TweakRadio
+            label="layout"
+            value={tweaks.view}
+            onChange={(v) => setTweak("view", v)}
+            options={[
+              { value: "canvas", label: "canvas" },
+              { value: "single", label: "single" },
+            ]}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+// Single, full-bleed live site for the "single" tweak
+function SingleView() {
+  const [route, setRoute] = useState({ name: "home" });
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "var(--ws-bg)" }}>
+      <div style={{ height: "100vh", overflow: "auto" }} className="ws-scroll">
+        <Site route={route} navigate={setRoute} frameHeight="auto" />
+      </div>
+    </div>
+  );
+}
+
+// Mount when all scripts are ready
+function mount() {
+  if (typeof DesignCanvas === "undefined" || typeof ChromeWindow === "undefined" ||
+      typeof TweaksPanel === "undefined" || typeof useTweaks === "undefined" ||
+      typeof HomePage === "undefined" || typeof ArchivePage === "undefined" ||
+      typeof PostPage === "undefined" || typeof POSTS === "undefined") {
+    setTimeout(mount, 30);
+    return;
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
+}
+mount();
+</script>
+
+</body>
+</html>
